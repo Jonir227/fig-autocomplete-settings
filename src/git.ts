@@ -19,20 +19,34 @@ const completionSpec: Fig.Spec = {
   subcommands: [
     {
       name: "commit",
-      options: [
-        {
-          name: "-m",
-          args: {
-            suggestions: gitmojis.gitmojis.map((gitmoji) => ({
-              name: gitmoji.name,
-              displayName: gitmoji.description,
-              description: gitmoji.description,
-              icon: gitmoji.emoji,
-              insertValue: `'${gitmoji.code} {cursor}'`,
-            })),
-          },
-        },
-      ],
+      generateSpec: async (tokens): Promise<Fig.Subcommand> => {
+        return {
+          name: "commit",
+          options: [
+            {
+              name: "-m",
+              args: {
+                suggestions: gitmojis.gitmojis
+                  .filter(({ description, name }) => {
+                    const target = tokens[
+                      tokens.length - 1
+                    ].toLocaleLowerCase();
+                    return (
+                      description.includes(target) || name.includes(target)
+                    );
+                  })
+                  .map((gitmoji) => ({
+                    name: tokens[tokens.length - 1],
+                    displayName: `${gitmoji.name} - ${gitmoji.description}`,
+                    description: gitmoji.description,
+                    icon: gitmoji.emoji,
+                    insertValue: `'${gitmoji.code} {cursor}'`,
+                  })),
+              },
+            },
+          ],
+        };
+      },
     },
   ],
 };
